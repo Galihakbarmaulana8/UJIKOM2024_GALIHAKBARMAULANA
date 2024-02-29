@@ -21,8 +21,7 @@ return new class extends Migration
             $table->integer('harga_produk');
             $table->integer('quantity');
             $table->timestamps();
-
-            $table->foreign('id_transaksi')->references('id')->on('transaksi')->onDelete('cascade');
+            $table->foreign('id_transaksi')->references('id')->on('transactions')->onDelete('cascade');
         });
     }
 

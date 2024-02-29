@@ -43,8 +43,10 @@ class transaksiR extends Controller
             'activity' => 'User Melihat Halaman Tambah Transaksi'
         ]);
         $subtitle = "Tambah Data Transaksi";
+        // Mengelompokkan produk berdasarkan kategori
+        $produk_by_kategori = produkM::orderBy('products.kategori')->get();
         $produk = produkM::all();
-        return view('transaksi/transaksi_create', compact('produk', 'subtitle'));
+        return view('transaksi/transaksi_create', compact('produk', 'subtitle', 'produk_by_kategori'));
     }
 
     /**
@@ -55,10 +57,6 @@ class transaksiR extends Controller
      */
     public function store(Request $request)
     {
-        $logM = logM::create([
-            'id_user' => Auth::user()->id,
-            'activity' => 'User Melakukan Tambah Transaksi'
-        ]);
         $request->validate([
             'nama_pelanggan' => 'required',
             'uang_bayar' => 'required',
@@ -92,6 +90,11 @@ class transaksiR extends Controller
             $transaksiitem->save();
             $no_produk++;
         }
+        $logM = logM::create([
+            'id_user' => Auth::user()->id,
+            'activity' => 'User Menambah Transaksi Baru: ' . 'Nama Pelanggan: ' . $transaksi->nama_pelanggan . ', ID Transaksi: ' . $transaksi->id_transaksi
+            // 'activity' => 'User Melakukan Tambah Transaksi'
+        ]);
         return redirect()->route('transaksi.index')->with('success', 'Transaksi Berhasil Ditambah');
     }
 
@@ -133,8 +136,179 @@ class transaksiR extends Controller
         return view('transaksi/transaksi_edit', compact('transaksi', 'produk', 'transaksiitem', 'subtitle', 'produkTerpilih'));
         
     }
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+{
+    // Validate the incoming request data
+    $request->validate([
+        'nama_pelanggan' => 'required|string|max:255', // Nama pelanggan harus diisi, berupa string, maksimal 255 karakter
+        'uang_bayar' => 'required|numeric|min:0', // Uang bayar harus diisi, berupa angka, minimal 0
+        'id_produk.*' => 'exists:products,id_produk', // ID produk harus ada di dalam tabel produk
+        'quantity.*' => 'integer|min:1', // Kuantitas produk harus berupa bilangan bulat positif
+    ]);
+
+     // Find the transaction by ID or throw a 404 error if not found
+    $transaksi = transaksiM::findOrFail($id);
+
+    // Set the nama_pelanggan field of the transaction to the value from the request
+    $transaksi->nama_pelanggan = $request->nama_pelanggan;
+
+    // Set the uang_bayar field of the transaction to the value from the request
+    $transaksi->uang_bayar = $request->uang_bayar;
     
-    public function edit1($id)
+    // Get the existing transaction items
+    $transaksiItems = $transaksi->items;
+    // Mengembalikan stok produk yang sebelumnya dibeli
+    foreach ($transaksiItems as $item) {
+        $produk = ProdukM::find($item->id_produk);
+        $produk->stok += $item->quantity;
+        $produk->save();
+    }
+
+    // Initialize total transaction price
+    $totalHarga = 0;
+
+    // Update existing transaction items and add new items from the request
+    foreach ($request->id_produk as $index => $newProdukId) {
+        // Find the existing transaction item with the same product ID
+        $existingItem = $transaksiItems->where('id_produk', $newProdukId)->first();
+
+        // Get the requested quantity for the current product
+        $requestedQuantity = $request->quantity[$index];
+
+        // Check if the requested quantity exceeds the available stock
+        $availableStock = ProdukM::find($newProdukId)->stok;
+        if ($requestedQuantity > $availableStock) {
+            // If the requested quantity exceeds the available stock, return an error response
+            return redirect()->back()->withErrors(['quantity' => 'Stok produk "' . ProdukM::find($newProdukId)->nama_produk . '" tidak mencukupi.']);
+        }
+
+        // If the item exists, update its quantity
+        if ($existingItem) {
+            $existingItem->quantity = $requestedQuantity;
+            $existingItem->save();
+        } else {
+            // Create a new transaction item for the new product
+            $newItem = new transaksiItemM();
+            $newItem->id_produk = $newProdukId;
+            $newItem->quantity = $requestedQuantity;
+            $newItem->harga_produk = ProdukM::find($newProdukId)->harga_produk;
+            $newItem->nama_produk = ProdukM::find($newProdukId)->nama_produk;
+            $transaksi->items()->save($newItem);
+        }
+
+        // Update stock for the current product
+        $produk = ProdukM::find($newProdukId);
+        $produk->stok -= $requestedQuantity;
+        $produk->save();
+
+        // Update total transaction price
+        $totalHarga += $newItem->harga_produk * $requestedQuantity;
+    }
+
+    // Remove items that are not in the updated request
+    $transaksi->items()->whereNotIn('id_produk', $request->id_produk)->delete();
+
+    // Update the total transaction price
+    $transaksi->total_harga = $totalHarga;
+
+    // Calculate the change (uang kembali)
+    $uangKembali = $request->uang_bayar - $totalHarga;
+    $transaksi->uang_kembali = $uangKembali;
+
+    // Save the changes to the transaction model
+    $transaksi->save();
+
+    // Redirect to the appropriate page after successful update
+    return redirect()->route('transaksi.index')->with('success', 'Transaksi berhasil diupdate');
+}
+
+//     public function update(Request $request, $id)
+// {
+//     // Validate the incoming request data
+//     $request->validate([
+//         'nama_pelanggan' => 'required|string|max:255', // Nama pelanggan harus diisi, berupa string, maksimal 255 karakter
+//         'uang_bayar' => 'required|numeric|min:0', // Uang bayar harus diisi, berupa angka, minimal 0
+//         'id_produk.*' => 'exists:products,id_produk', // ID produk harus ada di dalam tabel produk
+//         'quantity.*' => 'integer|min:1', // Kuantitas produk harus berupa bilangan bulat positif
+//     ]);
+
+//     // Find the transaction by ID or throw a 404 error if not found
+//     $transaksi = transaksiM::findOrFail($id);
+
+//     // Set the nama_pelanggan field of the transaction to the value from the request
+//     $transaksi->nama_pelanggan = $request->nama_pelanggan;
+
+//     // Set the uang_bayar field of the transaction to the value from the request
+//     $transaksi->uang_bayar = $request->uang_bayar;
+    
+//     // Get the existing transaction items
+//     $transaksiItems = $transaksi->items;
+
+//     // Initialize the total transaction price
+//     $totalHarga = 0;
+
+//     // Update existing transaction items and add new items from the request
+//     foreach ($request->id_produk as $index => $newProdukId) {
+//         // Find the existing transaction item with the same product ID
+//         $existingItem = $transaksiItems->where('id_produk', $newProdukId)->first();
+//          // Get the requested quantity for the current product
+//     $requestedQuantity = $request->quantity[$index];
+
+//     // Check if the requested quantity exceeds the available stock
+//     $availableStock = ProdukM::find($newProdukId)->stok;
+//     if ($requestedQuantity > $availableStock) {
+//         // If the requested quantity exceeds the available stock, return an error response
+//         return redirect()->back()->withErrors(['quantity' => 'Stok produk "' . ProdukM::find($newProdukId)->nama_produk . '" tidak mencukupi.']);
+//     }
+//         // If the item exists, update its quantity
+//         if ($existingItem) {
+//             $existingItem->quantity = $request->quantity[$index];
+//             $existingItem->save();
+//             $totalHarga += $existingItem->harga_produk * $existingItem->quantity;
+//             // Update stock for the current product
+//         $produk = ProdukM::find($newProdukId);
+//         $produk->stok -= ($existingItem->quantity - $requestedQuantity);
+//         $produk->save();
+//         } else {
+//             // Create a new transaction item for the new product
+//             $newItem = new transaksiItemM();
+//             $newItem->id_produk = $newProdukId;
+//             $newItem->quantity = $request->quantity[$index];
+//             $newItem->harga_produk = ProdukM::find($newProdukId)->harga_produk;
+//             $newItem->nama_produk = ProdukM::find($newProdukId)->nama_produk;
+//             $transaksi->items()->save($newItem);
+//             $totalHarga += $newItem->harga_produk * $newItem->quantity;
+//             // Update stock for the current product
+//         $produk = ProdukM::find($newProdukId);
+//         $produk->stok -= $newItem->quantity;
+//         $produk->save();
+//         }
+//     }
+
+//     // Remove items that are not in the updated request
+//     $transaksi->items()->whereNotIn('id_produk', $request->id_produk)->delete();
+
+//     // Update the total transaction price
+//     $transaksi->total_harga = $totalHarga;
+
+//     // Calculate the change (uang kembali)
+//     $uangKembali = $request->uang_bayar - $totalHarga;
+//     $transaksi->uang_kembali = $uangKembali;
+
+//     // Save the changes to the transaction model
+//     $transaksi->save();
+
+//     // Redirect to the appropriate page after successful update
+//     return redirect()->route('transaksi.index')->with('success', 'Transaksi berhasil diupdate');
+// }
+public function edit1($id)
 {
     $logM = logM::create([
         'id_user' => Auth::user()->id,
@@ -192,92 +366,6 @@ public function update1(Request $request, $id)
     return redirect()->route('transaksi.index')->with('success', 'Transaksi Berhasil Diupdate');
 }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-{
-    // Validate the incoming request data
-    $request->validate([
-        'nama_pelanggan' => 'required|string|max:255', // Nama pelanggan harus diisi, berupa string, maksimal 255 karakter
-        'uang_bayar' => 'required|numeric|min:0', // Uang bayar harus diisi, berupa angka, minimal 0
-        'id_produk.*' => 'exists:products,id_produk', // ID produk harus ada di dalam tabel produk
-        'quantity.*' => 'integer|min:1', // Kuantitas produk harus berupa bilangan bulat positif
-    ]);
-
-    // Find the transaction by ID or throw a 404 error if not found
-    $transaksi = transaksiM::findOrFail($id);
-
-    // Set the nama_pelanggan field of the transaction to the value from the request
-    $transaksi->nama_pelanggan = $request->nama_pelanggan;
-
-    // Set the uang_bayar field of the transaction to the value from the request
-    $transaksi->uang_bayar = $request->uang_bayar;
-    
-    // Get the existing transaction items
-    $transaksiItems = $transaksi->items;
-
-    // Initialize the total transaction price
-    $totalHarga = 0;
-
-    // Update existing transaction items and add new items from the request
-    foreach ($request->id_produk as $index => $newProdukId) {
-        // Find the existing transaction item with the same product ID
-        $existingItem = $transaksiItems->where('id_produk', $newProdukId)->first();
-         // Get the requested quantity for the current product
-    $requestedQuantity = $request->quantity[$index];
-
-    // Check if the requested quantity exceeds the available stock
-    $availableStock = ProdukM::find($newProdukId)->stok;
-    if ($requestedQuantity > $availableStock) {
-        // If the requested quantity exceeds the available stock, return an error response
-        return redirect()->back()->withErrors(['quantity' => 'Stok produk "' . ProdukM::find($newProdukId)->nama_produk . '" tidak mencukupi.']);
-    }
-        // If the item exists, update its quantity
-        if ($existingItem) {
-            $existingItem->quantity = $request->quantity[$index];
-            $existingItem->save();
-            $totalHarga += $existingItem->harga_produk * $existingItem->quantity;
-            // Update stock for the current product
-        $produk = ProdukM::find($newProdukId);
-        $produk->stok -= ($existingItem->quantity - $requestedQuantity);
-        $produk->save();
-        } else {
-            // Create a new transaction item for the new product
-            $newItem = new transaksiItemM();
-            $newItem->id_produk = $newProdukId;
-            $newItem->quantity = $request->quantity[$index];
-            $newItem->harga_produk = ProdukM::find($newProdukId)->harga_produk;
-            $newItem->nama_produk = ProdukM::find($newProdukId)->nama_produk;
-            $transaksi->items()->save($newItem);
-            $totalHarga += $newItem->harga_produk * $newItem->quantity;
-            // Update stock for the current product
-        $produk = ProdukM::find($newProdukId);
-        $produk->stok -= $newItem->quantity;
-        $produk->save();
-        }
-    }
-
-    // Remove items that are not in the updated request
-    $transaksi->items()->whereNotIn('id_produk', $request->id_produk)->delete();
-
-    // Update the total transaction price
-    $transaksi->total_harga = $totalHarga;
-
-    // Calculate the change (uang kembali)
-    $uangKembali = $request->uang_bayar - $totalHarga;
-    $transaksi->uang_kembali = $uangKembali;
-
-    // Save the changes to the transaction model
-    $transaksi->save();
-
-    // Redirect to the appropriate page after successful update
-    return redirect()->route('transaksi.index')->with('success', 'Transaksi berhasil diupdate');
-}
     // public function update(Request $request, $id)
     // {
     //     $total_harga = $request->get('total_harga');
@@ -322,7 +410,17 @@ public function update1(Request $request, $id)
      */
     public function destroy($id)
     {
-        transaksiM::where('id', $id)->delete();
+        $transaksi = transaksiM::find($id);
+        if (!$transaksi) {
+            return redirect()->route('transaksi.index')->with('error', 'Transaksi tidak ditemukan');
+        }
+
+        $Log = LogM::create([
+            'id_user' => Auth::user()->id,
+            'activity' => 'User Menghapus Transaksi: ' . 'Nama Pelanggan: ' . $transaksi->nama_pelanggan . ', ID Transaksi: ' . $transaksi->id_transaksi
+        ]);
+        $transaksi->delete();
+        // transaksiM::where('id', $id)->delete();
         return redirect()->route('transaksi.index')->with('success', 'Transaksi Berhasil Dihapus');
     }
     public function pdf()
@@ -344,7 +442,7 @@ public function update1(Request $request, $id)
             'activity'=> 'User Mencetak Struk'
         ]);
         // Ambil data transaksi dan produk berdasarkan ID
-        $transaksi = TransaksiM::select('transactions.*', 'products.*', 'transactions.id AS id_transaksi')
+        $transaksi = TransaksiM::select('transactions.*', 'products.*', 'transactions.id AS id')
         ->join('transaksiitem', 'transactions.id', '=', 'transaksiitem.id_transaksi')
         ->join('products', 'products.id_produk', '=', 'transaksiitem.id_produk')
         ->where('transactions.id', $id)
@@ -373,40 +471,4 @@ public function update1(Request $request, $id)
     
         return view('transaksi/transaksi_index', compact('title', 'transaksi', 'startDate', 'endDate'));
     }
-    // public function tgl()
-    // {
-    //     $logM = logM::create([
-    //         'id_user'=> Auth::user()->id,
-    //         'activity'=> 'User Mencetak Struk'
-    //     ]);
-    //     $subtitle = "Transaksi PDF Berdasarkan Tanggal";
-    //     return view('transaksi/transaksi_tgl', compact('subtitle'));
-    // }
-
-    // public function pertanggal(Request $request)
-    // {
-    //     // Gunakan tanggal yang diterima sesuai kebutuhan
-    //     $tgl_awal = $request->input('tgl_awal');
-    //     $tgl_akhir = $request->input('tgl_akhir');
-
-    //     // dd(["tanggal awal: ".$tgl_awal, "tanggal akhir: ".$tgl_akhir]);
-    //     $transaksiM = transaksiM::select('transactions.*', 'products.*', 'transactions.id AS id_transaksi', 'transactions.created_at AS Tanggal')
-    //     ->join('products', 'products.id_produk', '=', 'transactions.id_produk')
-    //     ->whereBetween('transactions.created_at',[$tgl_awal, $tgl_akhir])
-    //     ->get();
-    //     $pdf = PDF::loadview('transaksi/transaksi_pdf2', ['transaksiM' => $transaksiM]);
-    //     return $pdf->stream('stgl.pdf');
-    // }
-    // public function tgl(Request $request)
-    // {
-    //     $subtitle = "Transaksi PDF Berdasarkan Tanggal";
-    //     $from = $request->get('from');
-    //     $to = $request->get('to');
-
-    //     $transaksi = transaksiM::whereBetween('created_at', [$from, $to])->get();
-
-    //     $pdf = PDF::loadView('transaksi/transaksi_tgl', compact('transaksi', 'subtitle'));
-
-    //     return $pdf->stream('transaksi/transaksi_tgl');
-    // }
 }

@@ -64,13 +64,13 @@
                   </li>
                   <li><a><i class="fa fa-edit"></i> Forms <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                      @if (Auth::user()->role == 'admin')
+                      @if (Auth::user()->role != 'kasir')
                       <li><a href="{{('produk')}}">Products</a></li>
                       @endif
                       @if (Auth::user()->role == 'kasir')
                       <li><a href="{{ route('transaksi.create')}}">Add Transactions</a></li>
                       @endif
-                      @if (Auth::user()->role != 'owner')
+                      @if (Auth::user()->role == 'kasir')
                       <li><a href="{{('transaksi')}}">Transactions</a></li>
                       @endif
                       @if (Auth::user()->role == 'owner')
@@ -106,11 +106,10 @@
                       {{ Auth::User()->nama }}
                     </a>
                     <div class="dropdown-menu dropdown-usermenu pull-right" aria-labelledby="navbarDropdown">
+                      <a class="dropdown-item"  href="{{url('userguide')}}"><i class="fa fa-question pull-right"></i>Help</a>
                       <a class="dropdown-item"  href="{{url('logout')}}"><i class="fa fa-sign-out pull-right"></i> Log Out</a>
                     </div>
                   </li>
-
-
                 </ul>
               </nav>
             </div>

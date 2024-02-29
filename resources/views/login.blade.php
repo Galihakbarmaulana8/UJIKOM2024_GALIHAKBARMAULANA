@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>aMearch | Login</title>
+    <title>KiraMerch | Login</title>
 
     <!-- Bootstrap -->
     <link href="{{ url('vendors/bootstrap/dist/css/bootstrap.min.css')}}" rel="stylesheet">
@@ -21,13 +21,7 @@
     <!-- Custom Theme Style -->
     <link href="{{ url('build/css/custom.min.css')}}" rel="stylesheet">
   </head>
-  <style>
-    body{
-    }
-    .login{
-
-    }
-  </style>
+  
   <body class="login">
     <div>
       <a class="hiddenanchor" id="signup"></a>

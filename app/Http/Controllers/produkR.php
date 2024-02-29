@@ -52,7 +52,8 @@ class produkR extends Controller
     {
         $logM = logM::create([
             'id_user' => Auth::user()->id,
-            'activity' => 'User Melakukan Tambah Produk'
+            'activity' => 'User Melakukan Tambah Produk - Nama Produk: ' .  $request->input('nama_produk') . ' - Stok: ' . $request->input('stok') . ' - Kategori: ' . $request->input('kategori') 
+            // 'activity' => 'User Melakukan Tambah Produk'
         ]);
         $request->validate([
             'nama_produk' => 'required',
@@ -104,7 +105,8 @@ class produkR extends Controller
     {
         $logM = logM::create([
             'id_user' => Auth::user()->id,
-            'activity' => 'User Melakukan Edit Produk'
+            'activity' => 'User Melakukan Edit Produk - Nama Produk Baru: ' .  $request->input('nama_produk') . ' - Stok: ' . $request->input('stok') . ' - Kategori: ' . $request->input('kategori') 
+            // 'activity' => 'User Melakukan Edit Produk'
         ]);
         $request->validate([
             'nama_produk' => 'required',
@@ -126,10 +128,17 @@ class produkR extends Controller
      */
     public function destroy($id)
     {
+        $produk = produkM::find($id);
+
+        if (!$produk) {
+            return redirect()->route('produk.index')->with('error', 'Produk tidak ditemukan');
+        }
         $logM = logM::create([
             'id_user' => Auth::user()->id,
-            'activity' => 'User Melakukan Delete Produk'
+            'activity' => 'User Menghapus Produk: ' . $produk->nama_produk . ' - Stok: ' . $produk->stok . ' - Kategori: ' . $produk->kategori
+            // 'activity' => 'User Melakukan Delete Produk'
         ]);
+        $produk->delete();
         produkM::where('id_produk',$id)->delete();
         return redirect()->route('produk.index')->with('success', 'Produk Berhasil Dihapus');
     }

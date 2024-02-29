@@ -30,16 +30,22 @@
                                         <div class="col-md-6 col-12">
                                             <div class="form-group">
                                                 <label for="id_produk" class="control-label col-md-4 col-sm-4 ">Daftar Produk</label>
-                                                <select class="form-control" id="id_produk">
-                                                    @foreach ($produk as $produk)
-                                                        @if (in_array($produk->id_produk, $produkTerpilih))
-                                                            <option value="{{ $produk->id_produk }}" data-nama="{{ $produk->nama_produk }}" data-harga="{{ $produk->harga_produk }}" data-id="{{ $produk->id_produk }}" selected>{{ $produk->nama_produk }} - Rp.{{ number_format($produk->harga_produk) }} (Stok: {{ $produk->stok }})</option>
-                                                        @else
-                                                            <option value="{{ $produk->id_produk }}" data-nama="{{ $produk->nama_produk }}" data-harga="{{ $produk->harga_produk }}" data-id="{{ $produk->id_produk }}">{{ $produk->nama_produk }} - Rp.{{ number_format($produk->harga_produk) }} (Stok: {{ $produk->stok }})</option>
-                                                        @endif
-                                                    @endforeach
-                                                </select>
-                                                
+                                                <div class="input-group">
+                                                    <!-- Dropdown daftar produk -->
+                                                    <select class="form-control" id="id_produk">
+                                                        @foreach ($produk as $produk)
+                                                            @if (in_array($produk->id_produk, $produkTerpilih))
+                                                                <option value="{{ $produk->id_produk }}" data-nama="{{ $produk->nama_produk }}" data-harga="{{ $produk->harga_produk }}" data-id="{{ $produk->id_produk }}" selected>{{ $produk->nama_produk }} - Rp.{{ number_format($produk->harga_produk) }} (Stok: {{ $produk->stok }})</option>
+                                                            @else
+                                                                <option value="{{ $produk->id_produk }}" data-nama="{{ $produk->nama_produk }}" data-harga="{{ $produk->harga_produk }}" data-id="{{ $produk->id_produk }}">{{ $produk->nama_produk }} - Rp.{{ number_format($produk->harga_produk) }} (Stok: {{ $produk->stok }})</option>
+                                                            @endif
+                                                        @endforeach
+                                                    </select>
+                                                    <!-- Input pencarian -->
+                                                    <div class="input-group-append">
+                                                        <input type="text" id="search_produk" class="form-control" placeholder="Cari produk...">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="col-md-6 col-12">
@@ -74,9 +80,9 @@
                                                                 <input type="hidden" name="id_produk[]" value="{{ $item->id_produk }}">
                                                                 <input type="hidden" name="nama_produk[]" value="{{ $item->nama_produk }}">
                                                                 <input type="hidden" name="quantity[]" value="{{ $item->quantity }}">
-                                                                <!-- <button type="button" onclick="deleteItem({{ $index }})" class="btn btn-link">
+                                                                <button type="button" onclick="deleteItem()" class="btn btn-link">
                                                                     <i class="fa fa-trash text-danger"></i>
-                                                                </button> -->
+                                                                </button>
                                                             </td>
                                                         </tr>
                                                     @endforeach
@@ -96,7 +102,7 @@
                                             <label for="uang_bayar" class="control-label col-md-3 col-sm-3">Uang Bayar</label>
                                             <div class="col-md-9 col-sm-9">
                                                 <label for="uang_bayar" class="control-label col-md-2 col-sm-2 ">RP.</label>
-                                                <input name="uang_bayar" type="number" id="uang_bayar" class="form-control col-md-10 col-md-10" placeholder="Rp.">
+                                                <input name="uang_bayar" type="number" id="uang_bayar" class="form-control col-md-10 col-md-10" placeholder="Rp." value="{{$transaksi->uang_bayar}}" required>
                                                 @error('uang_bayar')
                                                 <p>{{ $message }}</p>
                                                 @enderror
@@ -106,7 +112,7 @@
                                             <label for="uang_kembali" class="control-label col-md-3 col-sm-4"></label>
                                             <div class="col-md-9 col-sm-9">
                                                 <label for="uang_kembali" class="control-label col-md-2 col-sm-2 ">RP.</label>
-                                                <input name="uang_kembali" type="number" id="uang_kembali" class="form-control col-md-10 col-md-10" placeholder="Rp."Readonly>
+                                                <input name="uang_kembali" type="number" id="uang_kembali" class="form-control col-md-10 col-md-10" placeholder="Rp." Readonly>
                                                 @error('uang_kembali')
                                                 <p>{{ $message }}</p>
                                                 @enderror
@@ -119,7 +125,7 @@
                                         <div class="col-md-12">
                                             <input type="hidden" name="total_harga" value="0">
                                             <a href="{{ route('transaksi.index')}}" type="button" class="btn btn-primary">Cancel</a>
-                                            <button type="reset" class="btn btn-primary">Reset</button>
+                                            <!-- <button type="reset" class="btn btn-primary">Reset</button> -->
                                             <button type="submit" name="submit" class="btn btn-success">Simpan Transaksi</button>
                                         </div>
                                     </div>
@@ -139,16 +145,16 @@
     var totalHarga = 0;
     var quantity = 0;
     var listItem = [];
+
+    // Fungsi untuk melakukan pencarian dan memperbarui tampilan daftar produk
+    
     // Tambahkan script untuk memuat item transaksi yang sudah ada sebelumnya
     $(document).ready(function() {
         // Loop melalui item transaksi yang sudah ada dan tambahkan ke array listItem
         $('.transaksiItem tr').each(function() {
-            //var item = listItem.filter((el) => el.id_produk === $('#id_produk').find(':selected').data('id'));
             var id_produk = $(this).find('input[name="id_produk[]"]').val();
             var nama = $(this).find('td:eq(1)').text();
             var quantity = parseInt($(this).find('input[name="quantity[]"]').val());
-            //harga: $('#id_produk').find(':selected').data('harga'),
-            //var harga = parseInt($('#id_produk').find(':selected').data('harga').replace('Rp.', '').replace('.', '').trim());
             var harga = parseInt($(this).find('td:eq(3)').text().replace('Rp.', '').replace('.', '').trim());
             var item = {
                 id_produk: id_produk,
@@ -157,33 +163,55 @@
                 harga: harga
             };
             listItem.push(item);
-            //updateTotalHarga(parseInt($('#id_produk').find(':selected').data('harga')));;
             updateTotalHarga(harga * quantity);
             updateQuantity(quantity);
         });
         updateTable();
     });
     // Script untuk menambahkan item ke dalam daftar transaksi
-    function tambahItem() {
-        //updateTotalHarga(parseInt($('#id_produk').find(':selected').data('harga')));;
-        // Mendapatkan informasi tentang produk yang dipilih dari dropdown
-        var selectedProduk = $('#id_produk :selected');
-        var id_produk = selectedProduk.data('id');
-        var nama = selectedProduk.data('nama');
-        var harga = parseInt(selectedProduk.data('harga'));
-        // Mencari item yang sudah ada dalam daftar transaksi
-        //var item = listItem.filter((el) => el.id_produk === $('#id_produk').find(':selected').data('id'));
-        var existingItem = listItem.find(item => item.id_produk === id_produk);
-        // Jika item sudah ada, tingkatkan jumlahnya; jika tidak, tambahkan item baru ke daftar
-        if (existingItem) {
-            existingItem.quantity++; // Menambah jumlah jika barang sudah ada
-            existingItem.harga = harga * existingItem.quantity; // Update harga total
-        } else {
-            listItem.push({id_produk: id_produk, nama: nama, quantity: 1, harga: harga}); // Menambah jumlah jika barang sudah ada
+    // function tambahItem() {
+    //     // Mendapatkan informasi tentang produk yang dipilih dari dropdown
+    //     var selectedProduk = $('#id_produk :selected');
+    //     var id_produk = selectedProduk.data('id');
+    //     var nama = selectedProduk.data('nama');
+    //     var harga = parseInt(selectedProduk.data('harga'));
+    //     // Mencari item yang sudah ada dalam daftar transaksi
+    //     var existingItem = listItem.find(item => item.id_produk === id_produk);
+    //     // Jika item sudah ada, tingkatkan jumlahnya; jika tidak, tambahkan item baru ke daftar
+    //     if (existingItem) {
+    //         existingItem.quantity++; // Menambah jumlah jika barang sudah ada
+    //         existingItem.harga = harga * existingItem.quantity; // Update harga total
+    //     } else {
+    //         listItem.push({id_produk: id_produk, nama: nama, quantity: 1, harga: harga}); // Menambah jumlah jika barang sudah ada
+    //     }
+    //     updateTotalHarga(harga); // Menambahkan harga ke total harga
+    //     updateQuantity(1); // Menambahkan 1 ke jumlah barang
+    //     updateTable(); // Memperbarui tabel transaksi
+    // }
+    function tambahItem(){
+        // Menambahkan harga produk yang dipilih ke total harga
+        updateTotalHarga(parseInt($('#id_produk').find(':selected').data('harga')))
+
+        // Mencari apakah item yang sama sudah ada dalam daftar
+        var item = listItem.filter((el) => el.id_produk === $('#id_produk').find(':selected').data('id'));
+        // var existingItem = listItem.find((item) => item.id_produk === selectedProdukId);
+
+        // Jika item sudah ada, tingkatkan jumlahnya; jika tidak, tambahkan item baru ke dalam daftar
+        if(item.length > 0){
+            item[0].quantity += 1;
+        }else{
+            var item = {
+                id_produk: $('#id_produk').find(':selected').data('id'),
+                nama: $('#id_produk').find(':selected').data('nama'),
+                harga: $('#id_produk').find(':selected').data('harga'),
+                quantity: 1
+            };
+            listItem.push(item);
         }
-        updateTotalHarga(harga); // Menambahkan harga ke total harga
-        updateQuantity(1); // Menambahkan 1 ke jumlah barang
-        updateTable(); // Memperbarui tabel transaksi
+        
+        // Menambah jumlah barang dan memperbarui tabel transaksi
+        updateQuantity(1);
+        updateTable();
     }
     // Fungsi untuk memperbarui tabel transaksi dengan data terbaru
     function updateTable() {
@@ -255,6 +283,16 @@
     // Panggil fungsi hitungUangKembali() setiap kali nilai uang bayar berubah
     $('#uang_bayar').on('input', function() {
         hitungUangKembali();
+    });
+    function searchProduk() {
+        var input = $('#search_produk').val().toLowerCase(); // Ambil nilai input pencarian dan konversi ke huruf kecil
+        $('#id_produk option').filter(function() { // Filter opsi daftar produk
+            $(this).toggle($(this).text().toLowerCase().indexOf(input) > -1); // Toggle tampilan opsi berdasarkan pencarian
+        });
+        }
+        // Panggil fungsi searchProduk() setiap kali nilai input pencarian berubah
+        $('#search_produk').on('input', function() {
+            searchProduk();
     });
 </script>
 @endsection

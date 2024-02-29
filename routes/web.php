@@ -25,6 +25,13 @@ Route::get('/', function () {
     return view('login', compact('subtitle'));
 })->middleware('auth');
 
+//GUIDE
+Route::get('/userguide', function () {
+    $subtitle = "USER GUIDE";
+    return view('guide/userguide', compact('subtitle'));
+})->middleware('auth');
+
+//Dashboard
 Route::resource('dashboard', dashboardC::class)->middleware('auth');
 
 //PDF
@@ -41,8 +48,8 @@ Route::get('/laporan/export', [laporanC::class, 'export'])->name('laporan.export
 Route::resource('/laporan', laporanC::class)->middleware('UserAkses:owner');
 // Route::get('laporan/admin', [laporanC::class, 'index'])->name('laporan.index');
 
-//
-Route::resource('/produk', produkR::class)->middleware('UserAkses:admin');
+//Produk
+Route::resource('/produk', produkR::class)->middleware('UserAkses:admin,owner');
 
 //Transaksi
 Route::resource('/transaksi', transaksiR::class)->middleware('UserAkses:admin,kasir');

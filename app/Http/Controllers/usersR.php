@@ -51,10 +51,7 @@ class usersR extends Controller
      */
     public function store(Request $request)
     {
-        $logM = logM::create([
-            'id_user' => Auth::user()->id,
-            'activity' => 'User Melakukan Tambah User'
-        ]);
+        
         $request->validate([
             'nama' => 'required',
             'username' => 'required|unique:users',
@@ -66,10 +63,14 @@ class usersR extends Controller
         $users = new User([
             'nama' => $request->nama,
             'username' => $request->username,
-            'password' => Hash::make($request->password),
+            'password' => $request->password,
             'role' => $request->role,
         ]);
         $users->save();
+        $logM = logM::create([
+            'id_user' => Auth::user()->id,
+            'activity' => 'User ' . Auth::user()->username . ' (' . Auth::user()->nama . ') Menambah User Baru: ' . $users->username . ' (' . $users->nama . ', Role: ' . $users->role . ')'
+        ]);
 
         return redirect()->route('users.index')->with('success', 'User Berhasil Ditambah');
     }
@@ -111,10 +112,6 @@ class usersR extends Controller
      */
     public function update(Request $request, $id)
     {
-        $logM = logM::create([
-            'id_user' => Auth::user()->id,
-            'activity' => 'User Melkukan Edit User'
-        ]);
         $request->validate([
             'nama' => 'required',
             'username' => 'required',
@@ -126,7 +123,10 @@ class usersR extends Controller
         $user->username = $request->input('username');
         $user->role = $request->input('role');
         $user->update();
-
+        $logM = logM::create([
+            'id_user' => Auth::user()->id,
+            'activity' => 'User '. Auth::user()->username . ' (' . Auth::user()->nama . ') Mengedit User: ' . $user->username . ' (' . $user->nama . ', Role: ' . $user->role . ')'
+        ]);
         return redirect()->route('users.index')->with('success', 'Data User Berhasil Diedit');
     }
 
@@ -138,11 +138,18 @@ class usersR extends Controller
      */
     public function destroy($id)
     {
+        $user = User::find($id);
+        if (!$user) {
+            return redirect()->route('users.index')->with('error', 'User tidak ditemukan');
+        }
         $logM = logM::create([
             'id_user' => Auth::user()->id,
-            'activity' => 'User Menghapus Data User'
+            'activity' => 'User ' . Auth::user()->username . ' (' . Auth::user()->nama . ') Menghapus User: ' . $user->username . ' (' . $user->nama . ', Role: ' . $user->role . ')'
+            // 'activity' => 'User Menghapus Data User'
         ]);
-        User::where('id',$id)->delete();
+        $user->delete();
+
+        // User::where('id',$id)->delete();
         return redirect()->route('users.index')->with('success', 'User Berhasil Dihapus');
     }
     public function pdf()
@@ -169,11 +176,8 @@ class usersR extends Controller
 
     public function change(Request $request, $id)
     {
-        $logM = logM::create([
-            'id_user' => Auth::user()->id,
-            'activity' => 'User Merubah Passowrd'
-        ]);
         $request->validate([
+            'old_password' => 'required|current_password',
             'new_password' => 'required',
             'password_confirm' => 'required|same:new_password',
         ]);
@@ -182,7 +186,11 @@ class usersR extends Controller
         $user->update([
             'password' => Hash::make($request->new_password),
         ]);
-        
+        $logM = logM::create([
+            'id_user' => Auth::user()->id,
+            'activity' => 'User ' . Auth::user()->username . ' (' . Auth::user()->nama . ') Merubah password User: ' . $user->username . ' (' . $user->nama . ', Role: ' . $user->role . ')'
+            // 'activity' => 'User Merubah Passowrd'
+        ]);
         return redirect()->route('users.index')->with('success', 'Password Berhasil Diedit');
     }
 }

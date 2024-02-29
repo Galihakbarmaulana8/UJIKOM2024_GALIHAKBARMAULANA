@@ -1,6 +1,23 @@
 @extends('admin')
 @section('content')
+<head>
+    <style>
+        .form-group.row {
+  display: flex;
+  align-items: center;
+}
 
+.form-group.row label {
+  flex: 0 0 100px;
+  white-space: nowrap;
+}
+
+.form-group.row input,
+.form-group.row button {
+  flex: 1 1 auto;
+}
+    </style>
+</head>
 <body class="nav-md">
     <div class="container body">
         <div class="right_col" role="main">
@@ -25,23 +42,50 @@
                                         </div>
                                     </div>
                                     <div class="row">
+                                    <div class="col-md-6 col-12">
+                                            <div class="form-group">
+                                                <label for="id_produk" class="control-label col-md-4 col-sm-4 input-group-prepend ">Daftar Kategori</label>
+                                                <div class="input-group">
+                                                    @php
+                                                    // Mengelompokkan produk berdasarkan kategori
+                                                    $produk_by_kategori = $produk->groupBy('kategori');
+                                                    @endphp
+                                                    <select class="form-control" id="kategori_produk">
+                                                        <option value="">Pilih Kategori</option>
+                                                        @foreach ($produk_by_kategori as $kategori => $produk_kategori)
+                                                            <option value="{{ $kategori }}">{{ $kategori }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
                                         <div class="col-md-6 col-12">
                                             <div class="form-group">
-                                                <label for="id_produk" class="control-label col-md-4 col-sm-4 ">Daftar Produk</label>
-                                                <select class="form-control" id="id_produk">
-                                                    @foreach ($produk as $produk)
-                                                        <option value="{{ $produk->id_produk}}" data-nama="{{ $produk->nama_produk }}" data-harga="{{ $produk->harga_produk }}" data-id="{{ $produk->id_produk }}">{{ $produk->nama_produk }} - Rp.{{ number_format($produk->harga_produk) }} (Stok: {{ $produk->stok }})</option>
-                                                    @endforeach
-                                                </select>
+                                                <label for="id_produk" class="control-label col-md-4 col-sm-4 input-group-prepend ">Daftar Produk</label>
+                                                <div class="input-group">
+                                                    <select class="form-control" id="id_produk">
+                                                        @php
+                                                            // Mengurutkan produk berdasarkan nama
+                                                            $produk_sorted = $produk->sortBy('nama_produk');
+                                                        @endphp
+                                                        @foreach ($produk_sorted as $produk)
+                                                            <option value="{{ $produk->id_produk}}" data-nama="{{ $produk->nama_produk }}" data-harga="{{ $produk->harga_produk }}" data-id="{{ $produk->id_produk }}">({{$produk->kategori}}) {{ $produk->nama_produk }} - Rp.{{ number_format($produk->harga_produk) }} (Stok: {{ $produk->stok }})</option>
+                                                        @endforeach
+                                                    </select>
+                                                    
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="col-md-6 col-12">
                                             <div class="form-group">
-                                                &nbsp;
+                                                <label for="">&nbsp;</label>
                                                 <button type="button" id="tambahproduk" class="btn btn-primary d-block" onclick="tambahItem()">Tambah Produk</button>
                                             </div>
                                         </div>
                                     </div>
+                                    <input type="text" id="search_produk" class="form-control" placeholder="Cari produk...">
                                     <br>
                                     <div class="row">
                                         <div class="col-md-12 table-responsive">
@@ -115,6 +159,17 @@
     var totalHarga = 0;
     var quantity = 0;
     var listItem = [];
+    // Fungsi untuk melakukan pencarian dan memperbarui tampilan daftar produk
+    function searchProduk() {
+        var input = $('#search_produk').val().toLowerCase(); // Ambil nilai input pencarian dan konversi ke huruf kecil
+        $('#id_produk option').filter(function() { // Filter opsi daftar produk
+            $(this).toggle($(this).text().toLowerCase().indexOf(input) > -1); // Toggle tampilan opsi berdasarkan pencarian
+        });
+        }
+        // Panggil fungsi searchProduk() setiap kali nilai input pencarian berubah
+        $('#search_produk').on('input', function() {
+            searchProduk();
+    });
     // Fungsi untuk menambahkan item baru ke dalam daftar transaksi
     function tambahItem(){
         // Menambahkan harga produk yang dipilih ke total harga
@@ -139,6 +194,8 @@
         // Menambah jumlah barang dan memperbarui tabel transaksi
         updateQuantity(1);
         updateTable();
+        // Setelah menambah item baru, perbarui dropdown produk berdasarkan kategori yang dipilih
+        filterProdukByKategori();
     }
     // Fungsi untuk memperbarui tabel transaksi dengan item-item terbaru
     function updateTable(){
@@ -242,6 +299,30 @@
     // $('#uang_bayar').on('input', function() {
     //     hitungUangKembali();
     // });
+    // Fungsi untuk memfilter produk berdasarkan kategori yang dipilih
+function filterProdukByKategori() {
+    var selectedKategori = $('#kategori_produk').val(); // Ambil nilai kategori yang dipilih
+    $('#id_produk option').each(function() {
+        // Toggle tampilan opsi berdasarkan kategori yang dipilih
+        $(this).toggle(selectedKategori === '' || $(this).text().indexOf(selectedKategori) > -1);
+    });
+}
+
+// Panggil fungsi filterProdukByKategori() setiap kali nilai dropdown kategori berubah
+$('#kategori_produk').on('change', function() {
+    filterProdukByKategori();
+});
+// Fungsi untuk mereset dropdown kategori dan menampilkan semua produk
+function resetProduk() {
+    $('#kategori_produk').val(''); // Mengatur nilai dropdown kategori menjadi kosong
+    filterProdukByKategori(); // Menampilkan semua produk
+}
+
+// Panggil fungsi resetProduk() saat tombol reset ditekan
+$('button[type="reset"]').on('click', function() {
+    resetProduk();
+});
+
 </script>
 @endsection
 

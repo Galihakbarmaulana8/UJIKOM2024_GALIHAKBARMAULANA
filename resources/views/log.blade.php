@@ -8,7 +8,8 @@
                     @if($message = Session::get('succes'))
                     <div class="alert alert-success">{{ $message }}</div>
                     @endif
-                    <h2>Log Activity</h2>
+                    <h4>Log Activity</h4>
+                    <hr class="sidebar-divider d-none d-md-block">
                     <table id="datatable" class="table table-bordered table fixed" style="width:100%">
                         <thead>
                             <tr>

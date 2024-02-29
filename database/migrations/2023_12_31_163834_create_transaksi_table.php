@@ -13,10 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('transaksi', function (Blueprint $table) {
+        Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->string('id_transaksi')->unique();
             $table->unsignedBigInteger('id_user');
+            $table->string('nama_pelanggan');
             $table->Integer('total_harga');
             $table->integer('uang_bayar');
             $table->integer('uang_kembali');
@@ -33,6 +34,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('transaksi');
+        Schema::dropIfExists('transactions');
     }
 };

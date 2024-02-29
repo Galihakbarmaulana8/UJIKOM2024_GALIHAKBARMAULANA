@@ -6,13 +6,14 @@
         <div class="right_col" role="main">
             <div class="x_panel">
                 <div class="card-body">
+                <h4 class="card-title">Data Users</h4>
+                <hr class="sidebar-divider d-none d-md-block">
                     @if($message = Session::get('success'))
                     <div class="alert alert-success">{{ $message }}</div>
                     @endif
                     <a href="{{ route('users.create') }}" type="button" class="btn btn-success">Tambah Data</a>
                     <a href="{{ url('users/pdf') }}" type="button" class="btn btn-warning">Cetak PDF</a>
                     <!-- Divider -->
-                    <hr class="sidebar-divider d-none d-md-block">
                     <table id="datatable" class="table table-bordered table fixed" style="width:100%">
                         <thead>
                             <tr>

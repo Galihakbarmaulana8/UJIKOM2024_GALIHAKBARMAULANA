@@ -7,8 +7,8 @@
             <div class="x_panel">               
                 <div class="card-body">
                 <h4 class="card-title">Laporan Transaksi</h4>
+                <hr class="sidebar-divider d-none d-md-block">
                 <div>
-                    
                     <br>
                     <form action="{{ route('laporan.filter') }}" method="GET" class="row" id="laporanForm">
                         <div class="form-group col-md-5">
@@ -54,6 +54,9 @@
                         </thead>
                         <tbody>
                             <?php $no_transaksi = 1 ?>
+                            @php
+                                $totalHargaFiltered = 0;
+                            @endphp
                             @foreach ($transaksi as $transaksi)
                                 <tr>
                                     <td>{{ $no_transaksi }}</td>
@@ -71,16 +74,25 @@
                                     <td>Rp.{{ number_format($transaksi->uang_kembali) }}</td>
                                     <td>{{ $transaksi->created_at->toDayDateTimeString() }}</td>
                                 </tr>
+                                @foreach ($transaksi->items as $item)
+                                    @php
+                                        $totalHargaFiltered += $item->quantity * $item->harga_produk;
+                                    @endphp
+                                @endforeach
                             <?php $no_transaksi++?>
                             @endforeach
                         </tbody>
+                        
                     </table>
+                    <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-center"><strong>Total Harga :</strong></td>
+                                <td colspan="3" class="text-center"><strong>Rp {{ number_format($totalHargaFiltered, 0, ',', '.') }}</strong></td>
+                            </tr>
+                        </tfoot>
                 </div>
-            
-
             </div>
             </div>
-
         </div>
     </div>
 </body>

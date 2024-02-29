@@ -35,7 +35,16 @@
                                         </div>
                                     </div>
                                     <div class="form-group row">
-                                        <label class="control-label col-md-3 col-sm-3 ">New Password</label>
+                                        <label class="control-label col-md-3 col-sm-3 ">Password <span class="text-danger">*</span></label>
+                                        <div class="col-md-9 col-sm-9 ">
+                                            <input name="old_password" type="password" class="form-control col-md-7 col-md-7" placeholder="****">
+                                            @error('old_password')
+                                            <p>{{ $message }}</p>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="control-label col-md-3 col-sm-3 ">New Password<span class="text-danger">*</span></label>
                                         <div class="col-md-9 col-sm-9 ">
                                             <input name="new_password" type="password" class="form-control col-md-7 col-md-7" placeholder="New Password">
                                             @error('new_password')
@@ -44,7 +53,7 @@
                                         </div>
                                     </div>
                                     <div class="form-group row">
-                                        <label class="control-label col-md-3 col-sm-3 ">Ulangi Password</label>
+                                        <label class="control-label col-md-3 col-sm-3 ">Ulangi Password<span class="text-danger">*</span></label>
                                         <div class="col-md-9 col-sm-9 ">
                                             <input name="password_confirm" type="password" class="form-control col-md-7 col-md-7" placeholder="Ulangi Password">
                                             @error('password_confirm')

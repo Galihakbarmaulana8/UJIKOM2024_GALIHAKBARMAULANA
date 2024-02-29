@@ -8,7 +8,7 @@
                     <div class="x-title">
                 <!-- ... (previous HTML code) ... -->
                         <div class="content">
-                            <h1>Welcome to Your Dashboard</h1>
+                            <!-- <h1>Welcome to Your Dashboard</h1> -->
                             <!-- <p>Explore the powerful features and tools at your fingertips to streamline your workflow and enhance productivity. Let's dive into what your dashboard has to offer:</p> -->
                         </div>
                         <!-- ... (remaining HTML code) ... -->
@@ -44,7 +44,7 @@
           <div class="animated flipInY col-lg-7 col-md-7 col-sm-7 ">
             <div class="tile-stats">
               <div class="icon"><i class="fa fa-credit-card"></i></div>
-              <div class="count">Rp.{{number_format($totaluangbayar)}}</div>
+              <div class="count">Rp.{{number_format($income)}}</div>
               <h3>Income</h3>
             </div>
           </div>

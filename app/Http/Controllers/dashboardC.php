@@ -22,8 +22,15 @@ class dashboardC extends Controller
         $totaluser = User::count();
         $totalproduk = produkM::count();
         $totaltransaksi = transaksiM::count();
-        $totaluangbayar = DB::table('transactions')
-            ->sum('uang_bayar');
+        // $totaluangbayar = DB::table('transactions')
+        //     ->sum('uang_bayar');
+        $totalUangBayar = DB::table('transactions')
+                    ->sum('uang_bayar');
+
+        $totalUangKembali = DB::table('transactions')
+                    ->sum('uang_kembali');
+
+        $income = $totalUangBayar - $totalUangKembali;
         $subtitle = "Dashboard";
         $transaksi = transaksiM::select('id', 'created_at')->get()->groupBy(function($transaksi){
             Carbon::parse($transaksi->created_at)->format('M');
@@ -34,7 +41,7 @@ class dashboardC extends Controller
             $months[]=$month;
             $monthCount[]=count($values);
         }
-        return view('dashboard', compact('logM','totaluser','totaltransaksi','totalproduk','totaluangbayar', 'transaksi', 'months', 'monthCount', 'subtitle'));
+        return view('dashboard', compact('logM','totaluser','totaltransaksi','totalproduk', 'transaksi', 'months', 'monthCount', 'subtitle','income'));
     }
     
 }
