@@ -63,7 +63,7 @@ class usersR extends Controller
         $users = new User([
             'nama' => $request->nama,
             'username' => $request->username,
-            'password' => $request->password,
+            'password' => Hash::make($request->password),
             'role' => $request->role,
         ]);
         $users->save();

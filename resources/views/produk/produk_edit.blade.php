@@ -48,7 +48,7 @@
                                                 <option value="Produk Kesehatan dan Kecantikan">Produk Kesehatan dan Kecantikan</option>
                                                 <option value="Seni dan Kerajinan Tangan">Seni dan Kerajinan Tangan</option>
                                                 @endif
-                                                @if($produk->kategori == 'Barang Elekronik')
+                                                @if($produk->kategori == 'Barang Elektronik')
                                                 <option value="Pakaian dan Aksesoris">Pakaian dan Aksesoris</option>
                                                 <option value="Barang Elektronik"selected>Barang Elektronik</option>
                                                 <option value="Boneka dan Action Figure">Boneka dan Action Figure</option>
@@ -58,7 +58,7 @@
                                                 <option value="Produk Kesehatan dan Kecantikan">Produk Kesehatan dan Kecantikan</option>
                                                 <option value="Seni dan Kerajinan Tangan">Seni dan Kerajinan Tangan</option>
                                                 @endif
-                                                @if($produk->kategori == 'Boneka Dan Action Figure')
+                                                @if($produk->kategori == 'Boneka dan Action Figure')
                                                 <option value="Pakaian dan Aksesoris">Pakaian dan Aksesoris</option>
                                                 <option value="Barang Elektronik">Barang Elektronik</option>
                                                 <option value="Boneka dan Action Figure"selected>Boneka dan Action Figure</option>

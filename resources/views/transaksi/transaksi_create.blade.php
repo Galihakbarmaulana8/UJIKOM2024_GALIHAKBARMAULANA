@@ -3,19 +3,19 @@
 <head>
     <style>
         .form-group.row {
-  display: flex;
-  align-items: center;
-}
-
-.form-group.row label {
-  flex: 0 0 100px;
-  white-space: nowrap;
-}
-
-.form-group.row input,
-.form-group.row button {
-  flex: 1 1 auto;
-}
+            display: flex;
+            align-items: center;
+        }
+        
+        .form-group.row label {
+            flex: 0 0 100px;
+            white-space: nowrap;
+        }
+        
+        .form-group.row input,
+        .form-group.row button {
+            flex: 1 1 auto;
+        }
     </style>
 </head>
 <body class="nav-md">
