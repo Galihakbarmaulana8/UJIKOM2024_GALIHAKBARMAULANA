@@ -86,7 +86,7 @@
                     </table>
                     <tfoot>
                             <tr>
-                                <td colspan="3" class="text-center"><strong>Total Harga :</strong></td>
+                                <td colspan="3" class="text-center"><strong>Income :</strong></td>
                                 <td colspan="3" class="text-center"><strong>Rp {{ number_format($totalHargaFiltered, 0, ',', '.') }}</strong></td>
                             </tr>
                         </tfoot>

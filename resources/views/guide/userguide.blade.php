@@ -91,6 +91,7 @@
                                     <h2 class="section-title">Butuh Bantuan?</h2>
                                     <p>Jika Anda mengalami masalah atau memiliki pertanyaan lebih lanjut, silakan hubungi kami:</p>
                                     <p>Email: galihakbarmaulana1@gmail.com</p>
+                                    <p>Github: https://github.com/Galihakbarmaulana8</p>
                                     <p>Telepon: 09503756908</p>
                                 </div>
                             </div>
